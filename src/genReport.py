@@ -109,21 +109,21 @@ def createBugReport():
     
     reportTxt = ''
     for thisQA in setOfQA:
-        bugQuery = {
+        bugQueryQA = {
                                'product': opts.PRODUCT,
                                'bug_status':QA_STATES,
                                'qa_contact': thisQA
                                }
-        thisQA_onQA = bugzilla.query(bugQuery)
+        thisQA_onQA = bugzilla.query(bugQueryQA)
         reportTxt += 'QE: '+thisQA+ ' has '+str(len(thisQA_onQA))+ " bugs \n"
         
     for thisDEV in setOfDevelopers:
-        bugQuery = {
+        bugQueryDEV = {
                                'product': opts.PRODUCT,
                                'bug_status':DEV_STATES,
                                'qa_contact': thisDEV
                                }
-        thisDEV_onDEV = bugzilla.query(bugQuery)
+        thisDEV_onDEV = bugzilla.query(bugQueryDEV)
         reportTxt += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
     
     print(reportTxt)
