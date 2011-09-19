@@ -1,2 +1,4 @@
 Quick and dirty script to email out bug reports to dev and qe.
 I also hope to add something to make a general report
+
+FYI.. emailing dev's by default is commented out in the src.. 
