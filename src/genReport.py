@@ -12,61 +12,49 @@ desc = "gen bugzilla report"
 parser.add_option('-u', '--bugzilla_username', type='string', dest='BZUSER', help='bugzilla username')
 parser.add_option('-p', '--bugzilla_password', type='string', dest='BZPASS', help='bugzilla password')
 parser.add_option('-f', '--product', type='string', dest='PRODUCT', help='bugzilla Product')
-parser.add_option('-q', '--qa', type='string', dest='QA', help='location of file w/ list of qe')
+parser.add_option('-q', '--qafile', type='string', dest='QA', help='location of file w/ list of qe')
+parser.add_option('-z', '--emailQA', action='store_true', dest='EMAILQA', help='send email report to QE')
+parser.add_option('-y', '--emailDEV', action='store_true', dest='EMAILDEV', help='send email report to DEV')
+parser.add_option('-r', '--createReport', action='store_true',dest='REPORT', help='generate a report, no email')
 
 (opts, args) = parser.parse_args()
 
+DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV,MODIFIED,POST'
+QA_STATES='ON_QA'
 
 bugzilla = Bugzilla36(url='https://bugzilla.redhat.com/xmlrpc.cgi', user=opts.BZUSER, password=opts.BZPASS)
 
 
 
 def email_onqa():
-    print('PRINT MY ON_QA BUGS')
-    for line in fileinput.input(opts.QA):
-        onqa_dict = {
-                     'product': opts.PRODUCT,
-                     'bug_status':'ON_QA',
-                     'qa_contact':''
-                     }
-        print(line)
-        onqa_dict['qa_contact'] = line
-        print(onqa_dict)
-        on_qa_bugs = bugzilla.query(onqa_dict)
-        print(on_qa_bugs)
-        email_txt = 'Your Current ON_QA bugs \n'
-        for thisbug in on_qa_bugs:
+    setOfQA = getSetOfEngineers(QA_STATES)
+    print(setOfQA)
+    for thisQA in setOfQA:
+        ondevForThisQADict = {
+                               'product': opts.PRODUCT,
+                               'bug_status':QA_STATES,
+                               'assigned_to': thisQA
+                               }
+        thisQA_onQA = bugzilla.query(ondevForThisQADict)
+        email_txt = opts.PRODUCT+' bugs for '+ thisQA+' \n'
+        for thisbug in thisQA_onQA:
             bugnum = str(thisbug)[1:7]
             email_txt += (str(thisbug)+'\n https://bugzilla.redhat.com/show_bug.cgi?id='+bugnum+ '\n\n')
         print email_txt
         msg = MIMEText(email_txt)
-        msg['Subject'] = opts.PRODUCT+ " ON_QA Bugs"
+        msg['Subject'] = opts.PRODUCT+" Bugs"
         s = smtplib.SMTP('localhost')
-        s.sendmail('whayutin@redhat.com', line, msg.as_string())
-        s.quit()
+        s.sendmail('whayutin@redhat.com', thisQA, msg.as_string())
+        s.quit()    
        
 def email_ondev():
-    setOfDevelopers = set([])
-    print('PRINT ONDEV BUGS')
-    ondevAssignedToDict = {
-                        'product': opts.PRODUCT,
-                        'bug_status':'ON_DEV,NEW,ASSIGNED,,ON_DEV,MODIFIED,POST'
-                           }
-    on_dev_bugs = bugzilla.query(ondevAssignedToDict)
-    print(on_dev_bugs)
-    for thisbug in on_dev_bugs:
-        bugnum = str(thisbug)[1:7]
-        mybug = bugzilla.getbug(bugnum)
-        developer = mybug.__getattribute__('assigned_to')
-        setOfDevelopers.add(developer)
-        print(developer)
-    
+    setOfDevelopers = getSetOfEngineers(DEV_STATES)
     print("THIS IS THE SET UP DEV")
     print(setOfDevelopers)
     for thisDev in setOfDevelopers:
         ondevForThisDevDict = {
                                'product': opts.PRODUCT,
-                               'bug_status':'ON_DEV,NEW,ASSIGNED,,ON_DEV,MODIFIED,POST',
+                               'bug_status':DEV_STATES,
                                'assigned_to': thisDev
                                }
         thisdev_ondev = bugzilla.query(ondevForThisDevDict)
@@ -81,7 +69,32 @@ def email_ondev():
         s.sendmail('whayutin@redhat.com', thisDev, msg.as_string())
         s.quit()
 
+def  getSetOfEngineers(bugStates):
+    setOfDevelopers = set([])
+    print('PRINT ONDEV BUGS')
+    ondevAssignedToDict = {
+                        'product': opts.PRODUCT,
+                        'bug_status':bugStates
+                           }
+    on_dev_bugs = bugzilla.query(ondevAssignedToDict)
+    print(on_dev_bugs)
+    for thisbug in on_dev_bugs:
+        bugnum = str(thisbug)[1:7]
+        mybug = bugzilla.getbug(bugnum)
+        developer = mybug.__getattribute__('assigned_to')
+        setOfDevelopers.add(developer)
+        print(developer)
+    return setOfDevelopers
 
-email_onqa()
-#Commented out just for saftely ... dont want to email dev when I'm working on this script
-#email_ondev()
+
+        
+def createBugReport():
+    print('CREATING BUG REPORT')
+
+if opts.EMAILQA:
+    print('EMAILING QA BUG REPORT')
+    email_onqa()
+
+if opts.EMAILDEV:
+    print('EMAILING DEV BUG REPORT')
+    email_ondev()
