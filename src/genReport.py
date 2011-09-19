@@ -12,7 +12,6 @@ desc = "gen bugzilla report"
 parser.add_option('-u', '--bugzilla_username', type='string', dest='BZUSER', help='bugzilla username')
 parser.add_option('-p', '--bugzilla_password', type='string', dest='BZPASS', help='bugzilla password')
 parser.add_option('-f', '--product', type='string', dest='PRODUCT', help='bugzilla Product')
-parser.add_option('-q', '--qafile', type='string', dest='QA', help='location of file w/ list of qe')
 parser.add_option('-z', '--emailQA', action='store_true', dest='EMAILQA', help='send email report to QE')
 parser.add_option('-y', '--emailDEV', action='store_true', dest='EMAILDEV', help='send email report to DEV')
 parser.add_option('-r', '--createReport', action='store_true',dest='REPORT', help='generate a report, no email')
@@ -22,6 +21,7 @@ parser.add_option('-r', '--createReport', action='store_true',dest='REPORT', hel
 DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV,MODIFIED,POST'
 QA_STATES='ON_QA'
 
+
 bugzilla = Bugzilla36(url='https://bugzilla.redhat.com/xmlrpc.cgi', user=opts.BZUSER, password=opts.BZPASS)
 
 
@@ -30,12 +30,12 @@ def email_onqa():
     setOfQA = getSetOfEngineers(QA_STATES)
     print(setOfQA)
     for thisQA in setOfQA:
-        ondevForThisQADict = {
+        bugQuery = {
                                'product': opts.PRODUCT,
                                'bug_status':QA_STATES,
-                               'assigned_to': thisQA
+                               'qa_contact': thisQA
                                }
-        thisQA_onQA = bugzilla.query(ondevForThisQADict)
+        thisQA_onQA = bugzilla.query(bugQuery)
         email_txt = opts.PRODUCT+' bugs for '+ thisQA+' \n'
         for thisbug in thisQA_onQA:
             bugnum = str(thisbug)[1:7]
@@ -49,7 +49,6 @@ def email_onqa():
        
 def email_ondev():
     setOfDevelopers = getSetOfEngineers(DEV_STATES)
-    print("THIS IS THE SET UP DEV")
     print(setOfDevelopers)
     for thisDev in setOfDevelopers:
         ondevForThisDevDict = {
@@ -71,25 +70,66 @@ def email_ondev():
 
 def  getSetOfEngineers(bugStates):
     setOfDevelopers = set([])
-    print('PRINT ONDEV BUGS')
-    ondevAssignedToDict = {
+    setOfQA = set([])
+    bugQuery = {
+                        'classification':'Red Hat',
                         'product': opts.PRODUCT,
                         'bug_status':bugStates
                            }
-    on_dev_bugs = bugzilla.query(ondevAssignedToDict)
-    print(on_dev_bugs)
-    for thisbug in on_dev_bugs:
+    print('bug query='+str(bugQuery))
+    queryResult = bugzilla.query(bugQuery)
+    #print(queryResult)
+    
+    for thisbug in queryResult:
         bugnum = str(thisbug)[1:7]
         mybug = bugzilla.getbug(bugnum)
-        developer = mybug.__getattribute__('assigned_to')
-        setOfDevelopers.add(developer)
-        print(developer)
-    return setOfDevelopers
+        if bugStates == DEV_STATES:
+            developer = mybug.__getattribute__('assigned_to')
+            setOfDevelopers.add(developer)
+            #print(developer)
+            
+        if bugStates == QA_STATES:
+            qa = mybug.__getattribute__('qa_contact')
+            setOfQA.add(qa)
+            #print(qa)
+            
+    if bugStates == DEV_STATES:
+        return setOfDevelopers
+    else:
+        return setOfQA
 
 
         
 def createBugReport():
     print('CREATING BUG REPORT')
+    setOfQA = getSetOfEngineers(QA_STATES)
+    print('set of QA='+str(setOfQA))
+    setOfDevelopers = getSetOfEngineers(DEV_STATES)
+    print('set of DEV='+str(setOfDevelopers))
+    
+    reportTxt = ''
+    for thisQA in setOfQA:
+        bugQuery = {
+                               'product': opts.PRODUCT,
+                               'bug_status':QA_STATES,
+                               'qa_contact': thisQA
+                               }
+        thisQA_onQA = bugzilla.query(bugQuery)
+        reportTxt += 'QE: '+thisQA+ ' has '+str(len(thisQA_onQA))+ " bugs \n"
+        
+    for thisDEV in setOfDevelopers:
+        bugQuery = {
+                               'product': opts.PRODUCT,
+                               'bug_status':DEV_STATES,
+                               'qa_contact': thisDEV
+                               }
+        thisDEV_onDEV = bugzilla.query(bugQuery)
+        reportTxt += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
+    
+    print(reportTxt)
+            
+        
+    
 
 if opts.EMAILQA:
     print('EMAILING QA BUG REPORT')
@@ -98,3 +138,7 @@ if opts.EMAILQA:
 if opts.EMAILDEV:
     print('EMAILING DEV BUG REPORT')
     email_ondev()
+
+if opts.REPORT:
+    print('CREATING REPORT')
+    createBugReport()

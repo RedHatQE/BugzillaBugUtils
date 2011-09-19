@@ -1,0 +1,16 @@
+#717661 ON_QA      - athomas@redhat.com - limit one provider account per provider
+#722907 ON_QA      - athomas@redhat.com - RFE : Conductor should keep poling for the state of instance  and reflect on UI accordingly
+#717728 ON_QA      - jclift@redhat.com - verify release notes for phase 3 beta are accurate
+#715100 ON_QA      - jguiditt@redhat.com - need man page for aeolus-image
+#713720 ON_QA      - jtomasek@redhat.com - UI - Footer not being shown in Chrome
+#724882 ON_QA      - kenkeiter@redhat.com - Default_pool_details Page looks ugly
+#724910 ON_QA      - kenkeiter@redhat.com - Provider name gets truncated in deployments.
+#726381 ON_QA      - rwsu@redhat.com - 0.3.0 release: Mock broken "out of the box" due to port 3002 assignment conflict
+#732985 ON_QA      - rwsu@redhat.com - Setup RHEVM URL from Aeolus GUI (Provider) instead of having to define a system env variable (API_PROVIDER)
+#733728 ON_QA      - rwsu@redhat.com - aeolus configure does not properly stop/start deltacloud
+#717978 ON_QA      - sloranz@redhat.com - "Editorial" content in image factory log message
+#726203 ON_QA      - sloranz@redhat.com - Using Beta candidate -failure when cleaning up temp instance & security group for RHEL6.1 image
+#736734 ON_QA      - slinaber@redhat.com - unable to start vsphere deployment using aeolus
+#641385 ON_QA      - mmorsi@redhat.com - [scheduler]: Setups with lots of images/realms/providers/provider accounts may be slow
+
+
