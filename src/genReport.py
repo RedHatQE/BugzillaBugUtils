@@ -44,7 +44,7 @@ def email_onqa():
         msg = MIMEText(email_txt)
         msg['Subject'] = opts.PRODUCT+" Bugs"
         s = smtplib.SMTP('localhost')
-        s.sendmail('whayutin@redhat.com', thisQA, msg.as_string())
+        s.sendmail(opts.BZUSER, thisQA, msg.as_string())
         s.quit()    
        
 def email_ondev():
@@ -66,7 +66,7 @@ def email_ondev():
         msg = MIMEText(email_txt)
         msg['Subject'] = opts.PRODUCT+" Bugs"
         s = smtplib.SMTP('localhost')
-        s.sendmail('whayutin@redhat.com', thisDev, msg.as_string())
+        s.sendmail(opts.BZUSER, thisDev, msg.as_string())
         s.quit()
 
 def  getSetOfEngineers(bugStates):
