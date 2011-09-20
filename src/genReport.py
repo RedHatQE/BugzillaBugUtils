@@ -121,7 +121,7 @@ def createBugReport():
         bugQueryDEV = {
                                'product': opts.PRODUCT,
                                'bug_status':DEV_STATES,
-                               'qa_contact': thisDEV
+                               'assigned_to': thisDEV
                                }
         thisDEV_onDEV = bugzilla.query(bugQueryDEV)
         reportTxt += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
