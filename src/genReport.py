@@ -11,17 +11,21 @@ desc = "gen bugzilla report"
 
 parser.add_option('-u', '--bugzilla_username', type='string', dest='BZUSER', help='bugzilla username')
 parser.add_option('-p', '--bugzilla_password', type='string', dest='BZPASS', help='bugzilla password')
+parser.add_option('-c', '--classification', type='string', dest='CLASSIFICATION', help='bugzilla Classification: "Red Hat","Fedora","Community","Other",etc')
 parser.add_option('-f', '--product', type='string', dest='PRODUCT', help='bugzilla Product')
 parser.add_option('-z', '--emailQA', action='store_true', dest='EMAILQA', help='send email report to QE')
 parser.add_option('-y', '--emailDEV', action='store_true', dest='EMAILDEV', help='send email report to DEV')
+parser.add_option('-m', '--modified', action='store_true', dest='MODIFIED', help='list modified bugs in the report')
 parser.add_option('-r', '--createReport', action='store_true',dest='REPORT', help='generate a report, no email')
 
 (opts, args) = parser.parse_args()
 
 DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV,MODIFIED,POST'
 QA_STATES='ON_QA'
+MODIFIED_STATE='MODIFIED' #scratching my own itch here.. looking for bugs to go to the build
 
-if opts.PRODUCT == None:
+if opts.PRODUCT == None or opts.CLASSIFICATION == None:
+    print('Please provide a -f bugzilla product and -c bugzilla classification')
     parser.print_help()
     exit(-1)
     
@@ -76,7 +80,7 @@ def  getSetOfEngineers(bugStates):
     setOfDevelopers = set([])
     setOfQA = set([])
     bugQuery = {
-                        'classification':'Red Hat',
+                        'classification': opts.CLASSIFICATION,
                         'product': opts.PRODUCT,
                         'bug_status':bugStates
                            }
@@ -103,29 +107,29 @@ def  getSetOfEngineers(bugStates):
         return setOfQA
 
 
+
         
 def createBugReport():
     print('CREATING BUG REPORT\n')
-    totalQAQuery = {
-                               'product': opts.PRODUCT,
-                               'bug_status':QA_STATES
-                               }
-    totalDEVQuery = {
-                               'product': opts.PRODUCT,
-                               'bug_status':DEV_STATES
-                               }
-  
-    
+
     totalONQA = bugzilla.query(totalQAQuery)
     totalONDEV = bugzilla.query(totalDEVQuery)
     qaCount = len(totalONQA)
     devCount = len(totalONDEV)
     
-    
-    print('Total bugs ON_QA ='+ str(qaCount)+'\n')
-    print('Total bugs ON_DEV ='+ str(devCount)+'\n')
+    print('######## BUG COUNTS ################')
+    print('Total bugs ON_QA ='+ str(qaCount))
+    print('Total bugs ON_DEV ='+ str(devCount))
     #print('Total blocker bugs ='+ str(qaBlockers)+'\n')
+    print('#############################################\n')
     
+    if opts.MODIFIED:
+        # bugs that may be ready for QE, but were not flipped to on_qa
+        print('######## Bugs in MODIFIED state #############')
+        bugsOnModified = bugzilla.query(totalModified)
+        for thisbug in bugsOnModified:
+            print(thisbug)
+        print('#############################################\n')
     
     setOfQA = getSetOfEngineers(QA_STATES)
     #print('set of QA='+str(setOfQA))
@@ -152,8 +156,25 @@ def createBugReport():
         reportTxt += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
     
     print(reportTxt)
-            
-        
+
+
+
+
+
+#### VARIOUS PUBLIC QUERIES ################
+totalQAQuery = {
+                               'product': opts.PRODUCT,
+                               'bug_status':QA_STATES
+                               }
+totalDEVQuery = {
+                               'product': opts.PRODUCT,
+                               'bug_status':DEV_STATES
+                               }
+totalModified = {
+                               'product': opts.PRODUCT,
+                               'bug_status':MODIFIED_STATE
+                               }
+#### VARIOUS PUBLIC QUERIES ################       
     
 
 if opts.EMAILQA:
@@ -165,5 +186,5 @@ if opts.EMAILDEV:
     email_ondev()
 
 if opts.REPORT:
-    print('CREATING REPORT')
+    #print('CREATING REPORT')
     createBugReport()
