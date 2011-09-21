@@ -21,8 +21,12 @@ parser.add_option('-r', '--createReport', action='store_true',dest='REPORT', hel
 DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV,MODIFIED,POST'
 QA_STATES='ON_QA'
 
-
+if opts.PRODUCT == None:
+    parser.print_help()
+    exit(-1)
+    
 bugzilla = Bugzilla36(url='https://bugzilla.redhat.com/xmlrpc.cgi', user=opts.BZUSER, password=opts.BZPASS)
+
 
 
 
@@ -101,11 +105,32 @@ def  getSetOfEngineers(bugStates):
 
         
 def createBugReport():
-    print('CREATING BUG REPORT')
+    print('CREATING BUG REPORT\n')
+    totalQAQuery = {
+                               'product': opts.PRODUCT,
+                               'bug_status':QA_STATES
+                               }
+    totalDEVQuery = {
+                               'product': opts.PRODUCT,
+                               'bug_status':DEV_STATES
+                               }
+  
+    
+    totalONQA = bugzilla.query(totalQAQuery)
+    totalONDEV = bugzilla.query(totalDEVQuery)
+    qaCount = len(totalONQA)
+    devCount = len(totalONDEV)
+    
+    
+    print('Total bugs ON_QA ='+ str(qaCount)+'\n')
+    print('Total bugs ON_DEV ='+ str(devCount)+'\n')
+    #print('Total blocker bugs ='+ str(qaBlockers)+'\n')
+    
+    
     setOfQA = getSetOfEngineers(QA_STATES)
-    print('set of QA='+str(setOfQA))
+    #print('set of QA='+str(setOfQA))
     setOfDevelopers = getSetOfEngineers(DEV_STATES)
-    print('set of DEV='+str(setOfDevelopers))
+    #print('set of DEV='+str(setOfDevelopers))
     
     reportTxt = ''
     for thisQA in setOfQA:
