@@ -17,6 +17,7 @@ parser.add_option('-f', '--product', type='string', dest='PRODUCT', help='bugzil
 parser.add_option('-s', '--release', type='string', dest='RELEASE', help='bugzilla Release') 
 parser.add_option('-z', '--emailQA', action='store_true', dest='EMAILQA', help='send email report to QE')
 parser.add_option('-y', '--emailDEV', action='store_true', dest='EMAILDEV', help='send email report to DEV')
+parser.add_option('-x', '--emailREPORT', type='string', dest='EMAILREPORT', help='send summary email to provided list of addresses')
 parser.add_option('-m', '--modified', action='store_true', dest='MODIFIED', help='list modified bugs in the report')
 parser.add_option('-r', '--createReport', action='store_true',dest='REPORT', help='generate a report, no email')
 
@@ -84,6 +85,24 @@ def email_ondev():
         s.sendmail(opts.BZUSER, thisDev, msg.as_string())
         s.quit()
 
+
+def email_report():
+	# Open provided email addresses file and read in addresses
+	files = open(opts.EMAILREPORT, 'r')
+	addresses = [x.strip() for x in files.readlines()]
+
+	# Get Report
+        report = createBugReport()
+
+        for address in addresses:
+        	msg = MIMEText(report)
+        	msg['Subject'] = opts.PRODUCT+" Bugs - Summary Report"
+        	s = smtplib.SMTP('localhost')
+        	s.sendmail(opts.BZUSER, address, msg.as_string())
+        	s.quit()
+
+
+
 def  getSetOfEngineers(bugStates):
     setOfDevelopers = set([])
     setOfQA = set([])
@@ -96,6 +115,8 @@ def  getSetOfEngineers(bugStates):
                            }
     if opts.COMPONENT == None:
             del bugQuery['component']
+    if opts.RELEASE == None:
+	    del bugQuery['target_release']
     print('bug query='+str(bugQuery))
     queryResult = bugzilla.query(bugQuery)
     #print(queryResult)
@@ -119,70 +140,76 @@ def  getSetOfEngineers(bugStates):
         return setOfQA
 
 
-
-
 def createBugReport():
     print('CREATING BUG REPORT\n')
+    buffer = ""
 
     totalONQA = bugzilla.query(totalQAQuery)
     totalONDEV = bugzilla.query(totalDEVQuery)
     qaCount = len(totalONQA)
     devCount = len(totalONDEV)
+  
+    buffer += ('############## CRITERIA  ###############\n')
+    buffer += ('Classification: ') + opts.CLASSIFICATION + '\n'
+    buffer += ('Product: ') + opts.PRODUCT + '\n'
+    if opts.COMPONENT:
+    	buffer += ('Component: ') + opts.COMPONENT + '\n'
+    if opts.RELEASE:
+    	buffer += ('Release: ') + opts.RELEASE + '\n'
+    buffer += ('#########################################\n\n')
 
-    print('######## BUG COUNTS ################')
-    print('Total bugs ON_QA ='+ str(qaCount))
-    print('Total bugs ON_DEV ='+ str(devCount))
-    #print('Total blocker bugs ='+ str(qaBlockers)+'\n')
-    print('#############################################\n')
+    buffer += ('############## BUG COUNTS ###############\n')
+    buffer += ('Total bugs ON_QA ='+ str(qaCount)) + '\n'
+    buffer += ('Total bugs ON_DEV ='+ str(devCount)) + '\n'
+    buffer += ('#########################################\n\n')
 
     if opts.MODIFIED:
         # bugs that may be ready for QE, but were not flipped to on_qa
-        print('######## Bugs in MODIFIED state #############')
+        buffer += ('######## Bugs in MODIFIED state #########\n')
         bugsOnModified = bugzilla.query(totalModified)
         for thisbug in bugsOnModified:
             print(thisbug)
-        print('#############################################\n')
+            buffer += str(thisbug) + '\n'
+        buffer += ('#########################################\n\n')
 
     setOfQA = getSetOfEngineers(QA_STATES)
-    #print('set of QA='+str(setOfQA))
     setOfDevelopers = getSetOfEngineers(DEV_STATES)
-    #print('set of DEV='+str(setOfDevelopers))
 
-    reportTxt = ''
     for thisQA in setOfQA:
-        bugQueryQA = {
-                               'classification': opts.CLASSIFICATION,
-                               'component': opts.COMPONENT,
-                               'product': opts.PRODUCT,
-                               'target_release': opts.RELEASE,
-                               'bug_status':QA_STATES,
-                               'qa_contact': thisQA
-                               }
-        if opts.COMPONENT == None:
-            del bugQueryQA['component']
-            
-        thisQA_onQA = bugzilla.query(bugQueryQA)
-        reportTxt += 'QE: '+thisQA+ ' has '+str(len(thisQA_onQA))+ " bugs \n"
+       	bugQueryQA = {
+                              'classification': opts.CLASSIFICATION,
+                              'component': opts.COMPONENT,
+                              'product': opts.PRODUCT,
+                              'target_release': opts.RELEASE,
+                              'bug_status':QA_STATES,
+                              'qa_contact': thisQA
+                              }
+       	if opts.COMPONENT == None:
+        	del bugQueryQA['component']
+       	if opts.RELEASE == None:
+	    	del bugQueryQA['target_release']
+
+       	thisQA_onQA = bugzilla.query(bugQueryQA)
+       	buffer += 'QE: '+thisQA+ ' has '+str(len(thisQA_onQA))+ " bugs \n"
 
     for thisDEV in setOfDevelopers:
-        bugQueryDEV = {
-                               'classification': opts.CLASSIFICATION,
-                               'component': opts.COMPONENT,
-                               'product': opts.PRODUCT,
-                               'target_release': opts.RELEASE,
-                               'bug_status':DEV_STATES,
-                               'assigned_to': thisDEV
-                               }
-        if opts.COMPONENT == None:
-            del bugQueryDEV['component']
-            
-        thisDEV_onDEV = bugzilla.query(bugQueryDEV)
-        reportTxt += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
+       	bugQueryDEV = {
+                              'classification': opts.CLASSIFICATION,
+                              'component': opts.COMPONENT,
+                              'product': opts.PRODUCT,
+                              'target_release': opts.RELEASE,
+                              'bug_status':DEV_STATES,
+                              'assigned_to': thisDEV
+                              }
+       	if opts.COMPONENT == None:
+           	del bugQueryDEV['component']
+        if opts.RELEASE == None:
+                del bugQueryDEV['target_release']
 
-    print(reportTxt)
+	thisDEV_onDEV = bugzilla.query(bugQueryDEV)
+        buffer  += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
 
-
-
+    return buffer
 
 
 #### VARIOUS PUBLIC QUERIES ################
@@ -211,6 +238,12 @@ if opts.COMPONENT == None:
             del totalQAQuery['component']
             del totalDEVQuery['component']
             del totalModified['component']
+
+if opts.RELEASE == None:
+            del totalQAQuery['target_release']
+            del totalDEVQuery['target_release']
+            del totalModified['target_release']
+
 #### VARIOUS PUBLIC QUERIES ################
 
 
@@ -222,9 +255,12 @@ if opts.EMAILDEV:
     print('EMAILING DEV BUG REPORT')
     email_ondev()
 
-if opts.REPORT:
-    #print('CREATING REPORT')
-    createBugReport()
+if opts.EMAILREPORT:
+   print('EMAILING SUMMARY REPORT')
+   email_report()
 
-if not opts.REPORT and not opts.EMAILDEV and not opts.EMAILQA:
+if opts.REPORT:
+    print createBugReport()
+
+if not opts.REPORT and not opts.EMAILDEV and not opts.EMAILQA and not opts.EMAILREPORT:
     print('NOOP. Please specify generate repot, email dev, or email qa.')
