@@ -90,6 +90,8 @@ def  getSetOfEngineers(bugStates):
                         'product': opts.PRODUCT,
                         'bug_status':bugStates
                            }
+    if opts.COMPONENT == None:
+            del bugQuery['component']
     print('bug query='+str(bugQuery))
     queryResult = bugzilla.query(bugQuery)
     #print(queryResult)
