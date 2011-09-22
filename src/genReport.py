@@ -12,6 +12,7 @@ desc = "gen bugzilla report"
 parser.add_option('-u', '--bugzilla_username', type='string', dest='BZUSER', help='bugzilla username')
 parser.add_option('-p', '--bugzilla_password', type='string', dest='BZPASS', help='bugzilla password')
 parser.add_option('-c', '--classification', type='string', dest='CLASSIFICATION', help='bugzilla Classification: "Red Hat","Fedora","Community","Other",etc')
+parser.add_option('-t', '--component', type='string', dest='COMPONENT', help='bugzilla Component')
 parser.add_option('-f', '--product', type='string', dest='PRODUCT', help='bugzilla Product')
 parser.add_option('-z', '--emailQA', action='store_true', dest='EMAILQA', help='send email report to QE')
 parser.add_option('-y', '--emailDEV', action='store_true', dest='EMAILDEV', help='send email report to DEV')
@@ -28,7 +29,7 @@ if opts.PRODUCT == None or opts.CLASSIFICATION == None:
     print('Please provide a -f bugzilla product and -c bugzilla classification')
     parser.print_help()
     exit(-1)
-    
+
 bugzilla = Bugzilla36(url='https://bugzilla.redhat.com/xmlrpc.cgi', user=opts.BZUSER, password=opts.BZPASS)
 
 
@@ -39,6 +40,8 @@ def email_onqa():
     print(setOfQA)
     for thisQA in setOfQA:
         bugQuery = {
+                               'classification': opts.CLASSIFICATION,
+                               'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
                                'bug_status':QA_STATES,
                                'qa_contact': thisQA
@@ -53,13 +56,15 @@ def email_onqa():
         msg['Subject'] = opts.PRODUCT+" Bugs"
         s = smtplib.SMTP('localhost')
         s.sendmail(opts.BZUSER, thisQA, msg.as_string())
-        s.quit()    
-       
+        s.quit()
+
 def email_ondev():
     setOfDevelopers = getSetOfEngineers(DEV_STATES)
     print(setOfDevelopers)
     for thisDev in setOfDevelopers:
         ondevForThisDevDict = {
+                               'classification': opts.CLASSIFICATION,
+                               'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
                                'bug_status':DEV_STATES,
                                'assigned_to': thisDev
@@ -81,13 +86,14 @@ def  getSetOfEngineers(bugStates):
     setOfQA = set([])
     bugQuery = {
                         'classification': opts.CLASSIFICATION,
+                        'component': opts.COMPONENT,
                         'product': opts.PRODUCT,
                         'bug_status':bugStates
                            }
     print('bug query='+str(bugQuery))
     queryResult = bugzilla.query(bugQuery)
     #print(queryResult)
-    
+
     for thisbug in queryResult:
         bugnum = str(thisbug)[1:7]
         mybug = bugzilla.getbug(bugnum)
@@ -95,12 +101,12 @@ def  getSetOfEngineers(bugStates):
             developer = mybug.__getattribute__('assigned_to')
             setOfDevelopers.add(developer)
             #print(developer)
-            
+
         if bugStates == QA_STATES:
             qa = mybug.__getattribute__('qa_contact')
             setOfQA.add(qa)
             #print(qa)
-            
+
     if bugStates == DEV_STATES:
         return setOfDevelopers
     else:
@@ -108,7 +114,7 @@ def  getSetOfEngineers(bugStates):
 
 
 
-        
+
 def createBugReport():
     print('CREATING BUG REPORT\n')
 
@@ -116,13 +122,13 @@ def createBugReport():
     totalONDEV = bugzilla.query(totalDEVQuery)
     qaCount = len(totalONQA)
     devCount = len(totalONDEV)
-    
+
     print('######## BUG COUNTS ################')
     print('Total bugs ON_QA ='+ str(qaCount))
     print('Total bugs ON_DEV ='+ str(devCount))
     #print('Total blocker bugs ='+ str(qaBlockers)+'\n')
     print('#############################################\n')
-    
+
     if opts.MODIFIED:
         # bugs that may be ready for QE, but were not flipped to on_qa
         print('######## Bugs in MODIFIED state #############')
@@ -130,31 +136,35 @@ def createBugReport():
         for thisbug in bugsOnModified:
             print(thisbug)
         print('#############################################\n')
-    
+
     setOfQA = getSetOfEngineers(QA_STATES)
     #print('set of QA='+str(setOfQA))
     setOfDevelopers = getSetOfEngineers(DEV_STATES)
     #print('set of DEV='+str(setOfDevelopers))
-    
+
     reportTxt = ''
     for thisQA in setOfQA:
         bugQueryQA = {
+                               'classification': opts.CLASSIFICATION,
+                               'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
                                'bug_status':QA_STATES,
                                'qa_contact': thisQA
                                }
         thisQA_onQA = bugzilla.query(bugQueryQA)
         reportTxt += 'QE: '+thisQA+ ' has '+str(len(thisQA_onQA))+ " bugs \n"
-        
+
     for thisDEV in setOfDevelopers:
         bugQueryDEV = {
+                               'classification': opts.CLASSIFICATION,
+                               'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
                                'bug_status':DEV_STATES,
                                'assigned_to': thisDEV
                                }
         thisDEV_onDEV = bugzilla.query(bugQueryDEV)
         reportTxt += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
-    
+
     print(reportTxt)
 
 
@@ -163,19 +173,25 @@ def createBugReport():
 
 #### VARIOUS PUBLIC QUERIES ################
 totalQAQuery = {
+                               'classification': opts.CLASSIFICATION,
+                               'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
                                'bug_status':QA_STATES
                                }
 totalDEVQuery = {
+                               'classification': opts.CLASSIFICATION,
+                               'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
                                'bug_status':DEV_STATES
                                }
 totalModified = {
+                               'classification': opts.CLASSIFICATION,
+                               'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
                                'bug_status':MODIFIED_STATE
                                }
-#### VARIOUS PUBLIC QUERIES ################       
-    
+#### VARIOUS PUBLIC QUERIES ################
+
 
 if opts.EMAILQA:
     print('EMAILING QA BUG REPORT')
@@ -188,3 +204,6 @@ if opts.EMAILDEV:
 if opts.REPORT:
     #print('CREATING REPORT')
     createBugReport()
+
+if not opts.REPORT and not opts.EMAILDEV and not opts.EMAILQA:
+    print('NOOP. Please specify generate repot, email dev, or email qa.')
