@@ -87,11 +87,21 @@ def email_ondev():
             bugnum = str(thisbug)[1:7]
             email_txt += (str(thisbug)+'\n https://bugzilla.redhat.com/show_bug.cgi?id='+bugnum+ '\n\n')
         #print email_txt
-	msg = MIMEText(email_txt)
-        msg['Subject'] = opts.PRODUCT+" Bugs"
-        s = smtplib.SMTP('localhost')
-        s.sendmail(opts.BZUSER, thisDev, msg.as_string())
-        s.quit()
+	buffer = ('############## CRITERIA  ################\n')
+    	buffer += ('Classification: ') + opts.CLASSIFICATION + '\n'
+    	buffer += ('Product: ') + opts.PRODUCT + '\n'
+    	if opts.COMPONENT:
+        	buffer += ('Component: ') + opts.COMPONENT + '\n'
+    	if opts.RELEASE:
+        	buffer += ('Release: ') + opts.RELEASE + '\n'
+    	buffer += ('#########################################\n\n')
+	buffer += email_txt
+        print buffer
+#	 msg = MIMEText(buffert)
+#        msg['Subject'] = opts.PRODUCT+" Bugs"
+#        s = smtplib.SMTP('localhost')
+#        s.sendmail(opts.BZUSER, thisDev, msg.as_string())
+#        s.quit()
 
 
 def email_report():
