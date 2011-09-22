@@ -14,6 +14,7 @@ parser.add_option('-p', '--bugzilla_password', type='string', dest='BZPASS', hel
 parser.add_option('-c', '--classification', type='string', dest='CLASSIFICATION', help='bugzilla Classification: "Red Hat","Fedora","Community","Other",etc')
 parser.add_option('-t', '--component', type='string', dest='COMPONENT', help='bugzilla Component')
 parser.add_option('-f', '--product', type='string', dest='PRODUCT', help='bugzilla Product')
+parser.add_option('-s', '--release', type='string', dest='RELEASE', help='bugzilla Release') 
 parser.add_option('-z', '--emailQA', action='store_true', dest='EMAILQA', help='send email report to QE')
 parser.add_option('-y', '--emailDEV', action='store_true', dest='EMAILDEV', help='send email report to DEV')
 parser.add_option('-m', '--modified', action='store_true', dest='MODIFIED', help='list modified bugs in the report')
@@ -43,6 +44,7 @@ def email_onqa():
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'target_release': opts.RELEASE,
                                'bug_status':QA_STATES,
                                'qa_contact': thisQA
                                }
@@ -66,6 +68,7 @@ def email_ondev():
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'target_release': opts.RELEASE,
                                'bug_status':DEV_STATES,
                                'assigned_to': thisDev
                                }
@@ -88,6 +91,7 @@ def  getSetOfEngineers(bugStates):
                         'classification': opts.CLASSIFICATION,
                         'component': opts.COMPONENT,
                         'product': opts.PRODUCT,
+                        'target_release': opts.RELEASE,
                         'bug_status':bugStates
                            }
     if opts.COMPONENT == None:
@@ -150,6 +154,7 @@ def createBugReport():
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'target_release': opts.RELEASE,
                                'bug_status':QA_STATES,
                                'qa_contact': thisQA
                                }
@@ -164,6 +169,7 @@ def createBugReport():
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'target_release': opts.RELEASE,
                                'bug_status':DEV_STATES,
                                'assigned_to': thisDEV
                                }
@@ -184,18 +190,21 @@ totalQAQuery = {
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'target_release': opts.RELEASE,
                                'bug_status':QA_STATES
                                }
 totalDEVQuery = {
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'target_release': opts.RELEASE,
                                'bug_status':DEV_STATES
                                }
 totalModified = {
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'target_release': opts.RELEASE,
                                'bug_status':MODIFIED_STATE
                                }
 if opts.COMPONENT == None:
