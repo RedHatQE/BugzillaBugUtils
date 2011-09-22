@@ -151,6 +151,9 @@ def createBugReport():
                                'bug_status':QA_STATES,
                                'qa_contact': thisQA
                                }
+        if opts.COMPONENT == None:
+            del bugQueryQA['component']
+            
         thisQA_onQA = bugzilla.query(bugQueryQA)
         reportTxt += 'QE: '+thisQA+ ' has '+str(len(thisQA_onQA))+ " bugs \n"
 
@@ -162,6 +165,9 @@ def createBugReport():
                                'bug_status':DEV_STATES,
                                'assigned_to': thisDEV
                                }
+        if opts.COMPONENT == None:
+            del bugQueryDEV['component']
+            
         thisDEV_onDEV = bugzilla.query(bugQueryDEV)
         reportTxt += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
 
@@ -190,6 +196,10 @@ totalModified = {
                                'product': opts.PRODUCT,
                                'bug_status':MODIFIED_STATE
                                }
+if opts.COMPONENT == None:
+            del totalQAQuery['component']
+            del totalDEVQuery['component']
+            del totalModified['component']
 #### VARIOUS PUBLIC QUERIES ################
 
 
