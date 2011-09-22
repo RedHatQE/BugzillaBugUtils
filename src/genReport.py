@@ -48,13 +48,17 @@ def email_onqa():
                                'target_release': opts.RELEASE,
                                'bug_status':QA_STATES,
                                'qa_contact': thisQA
-                               }
+                              }
+        if opts.COMPONENT == None:
+            del bugQuery['component']
+        if opts.RELEASE == None:
+            del bugQuery['target_release']
         thisQA_onQA = bugzilla.query(bugQuery)
         email_txt = opts.PRODUCT+' bugs for '+ thisQA+' \n'
         for thisbug in thisQA_onQA:
             bugnum = str(thisbug)[1:7]
             email_txt += (str(thisbug)+'\n https://bugzilla.redhat.com/show_bug.cgi?id='+bugnum+ '\n\n')
-        print email_txt
+        #print email_txt
         msg = MIMEText(email_txt)
         msg['Subject'] = opts.PRODUCT+" Bugs"
         s = smtplib.SMTP('localhost')
@@ -73,13 +77,17 @@ def email_ondev():
                                'bug_status':DEV_STATES,
                                'assigned_to': thisDev
                                }
+	if opts.COMPONENT == None:
+            del ondevForThisDevDict['component']
+    	if opts.RELEASE == None:
+            del ondevForThisDevDict['target_release']
         thisdev_ondev = bugzilla.query(ondevForThisDevDict)
         email_txt = opts.PRODUCT+' bugs for '+ thisDev+' \n'
         for thisbug in thisdev_ondev:
             bugnum = str(thisbug)[1:7]
             email_txt += (str(thisbug)+'\n https://bugzilla.redhat.com/show_bug.cgi?id='+bugnum+ '\n\n')
-        print email_txt
-        msg = MIMEText(email_txt)
+        #print email_txt
+	msg = MIMEText(email_txt)
         msg['Subject'] = opts.PRODUCT+" Bugs"
         s = smtplib.SMTP('localhost')
         s.sendmail(opts.BZUSER, thisDev, msg.as_string())
@@ -120,7 +128,6 @@ def  getSetOfEngineers(bugStates):
     print('bug query='+str(bugQuery))
     queryResult = bugzilla.query(bugQuery)
     #print(queryResult)
-
     for thisbug in queryResult:
         bugnum = str(thisbug)[1:7]
         mybug = bugzilla.getbug(bugnum)
@@ -149,7 +156,7 @@ def createBugReport():
     qaCount = len(totalONQA)
     devCount = len(totalONDEV)
   
-    buffer += ('############## CRITERIA  ###############\n')
+    buffer += ('############## CRITERIA  ################\n')
     buffer += ('Classification: ') + opts.CLASSIFICATION + '\n'
     buffer += ('Product: ') + opts.PRODUCT + '\n'
     if opts.COMPONENT:
