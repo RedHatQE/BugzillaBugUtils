@@ -185,7 +185,7 @@ def createBugReport():
         buffer += ('######## Bugs in MODIFIED state #########\n')
         bugsOnModified = bugzilla.query(totalModified)
         for thisbug in bugsOnModified:
-            print(thisbug)
+            #print(thisbug)
             buffer += str(thisbug) + '\n'
         buffer += ('#########################################\n\n')
 
