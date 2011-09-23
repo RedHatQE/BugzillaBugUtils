@@ -61,6 +61,8 @@ def email_onqa():
         #print email_txt
         msg = MIMEText(email_txt)
         msg['Subject'] = opts.PRODUCT+" Bugs"
+        msg['From'] = opts.BZUSER
+        msg['To'] = thisQA
         s = smtplib.SMTP('localhost')
         s.sendmail(opts.BZUSER, thisQA, msg.as_string())
         s.quit()
@@ -97,11 +99,13 @@ def email_ondev():
         buffer += ('#########################################\n\n')
         buffer += email_txt
         print buffer
-#        msg = MIMEText(buffert)
-#        msg['Subject'] = opts.PRODUCT+" Bugs"
-#        s = smtplib.SMTP('localhost')
-#        s.sendmail(opts.BZUSER, thisDev, msg.as_string())
-#        s.quit()
+        msg = MIMEText(buffert)
+        msg['Subject'] = opts.PRODUCT+" Bugs"
+        msg['From'] = opts.BZUSER
+        msg['To'] = thisDev
+        s = smtplib.SMTP('localhost')
+        s.sendmail(opts.BZUSER, thisDev, msg.as_string())
+        s.quit()
 
 
 def email_report():
@@ -115,6 +119,8 @@ def email_report():
     for address in addresses:
         msg = MIMEText(report)
         msg['Subject'] = opts.PRODUCT+" Bugs - Summary Report"
+        msg['From'] = opts.BZUSER
+        msg['To'] = address
         s = smtplib.SMTP('localhost')
         s.sendmail(opts.BZUSER, address, msg.as_string())
         s.quit()
