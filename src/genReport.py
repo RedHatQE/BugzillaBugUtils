@@ -14,7 +14,7 @@ parser.add_option('-p', '--bugzilla_password', type='string', dest='BZPASS', hel
 parser.add_option('-c', '--classification', type='string', dest='CLASSIFICATION', help='bugzilla Classification: "Red Hat","Fedora","Community","Other",etc')
 parser.add_option('-t', '--component', type='string', dest='COMPONENT', help='bugzilla Component')
 parser.add_option('-f', '--product', type='string', dest='PRODUCT', help='bugzilla Product')
-parser.add_option('-s', '--release', type='string', dest='RELEASE', help='bugzilla Release') 
+parser.add_option('-s', '--release', type='string', dest='RELEASE', help='bugzilla Release')
 parser.add_option('-z', '--emailQA', action='store_true', dest='EMAILQA', help='send email report to QE')
 parser.add_option('-y', '--emailDEV', action='store_true', dest='EMAILDEV', help='send email report to DEV')
 parser.add_option('-x', '--emailREPORT', type='string', dest='EMAILREPORT', help='send summary email to provided list of addresses')
@@ -77,9 +77,9 @@ def email_ondev():
                                'bug_status':DEV_STATES,
                                'assigned_to': thisDev
                                }
-	if opts.COMPONENT == None:
+        if opts.COMPONENT == None:
             del ondevForThisDevDict['component']
-    	if opts.RELEASE == None:
+        if opts.RELEASE == None:
             del ondevForThisDevDict['target_release']
         thisdev_ondev = bugzilla.query(ondevForThisDevDict)
         email_txt = opts.PRODUCT+' bugs for '+ thisDev+' \n'
@@ -87,17 +87,17 @@ def email_ondev():
             bugnum = str(thisbug)[1:7]
             email_txt += (str(thisbug)+'\n https://bugzilla.redhat.com/show_bug.cgi?id='+bugnum+ '\n\n')
         #print email_txt
-	buffer = ('############## CRITERIA  ################\n')
-    	buffer += ('Classification: ') + opts.CLASSIFICATION + '\n'
-    	buffer += ('Product: ') + opts.PRODUCT + '\n'
-    	if opts.COMPONENT:
-        	buffer += ('Component: ') + opts.COMPONENT + '\n'
-    	if opts.RELEASE:
-        	buffer += ('Release: ') + opts.RELEASE + '\n'
-    	buffer += ('#########################################\n\n')
-	buffer += email_txt
+        buffer = ('############## CRITERIA  ################\n')
+        buffer += ('Classification: ') + opts.CLASSIFICATION + '\n'
+        buffer += ('Product: ') + opts.PRODUCT + '\n'
+        if opts.COMPONENT:
+            buffer += ('Component: ') + opts.COMPONENT + '\n'
+        if opts.RELEASE:
+            buffer += ('Release: ') + opts.RELEASE + '\n'
+        buffer += ('#########################################\n\n')
+        buffer += email_txt
         print buffer
-#	 msg = MIMEText(buffert)
+#        msg = MIMEText(buffert)
 #        msg['Subject'] = opts.PRODUCT+" Bugs"
 #        s = smtplib.SMTP('localhost')
 #        s.sendmail(opts.BZUSER, thisDev, msg.as_string())
@@ -105,19 +105,19 @@ def email_ondev():
 
 
 def email_report():
-	# Open provided email addresses file and read in addresses
-	files = open(opts.EMAILREPORT, 'r')
-	addresses = [x.strip() for x in files.readlines()]
+        # Open provided email addresses file and read in addresses
+    files = open(opts.EMAILREPORT, 'r')
+    addresses = [x.strip() for x in files.readlines()]
 
-	# Get Report
-        report = createBugReport()
+    # Get Report
+    report = createBugReport()
 
-        for address in addresses:
-        	msg = MIMEText(report)
-        	msg['Subject'] = opts.PRODUCT+" Bugs - Summary Report"
-        	s = smtplib.SMTP('localhost')
-        	s.sendmail(opts.BZUSER, address, msg.as_string())
-        	s.quit()
+    for address in addresses:
+        msg = MIMEText(report)
+        msg['Subject'] = opts.PRODUCT+" Bugs - Summary Report"
+        s = smtplib.SMTP('localhost')
+        s.sendmail(opts.BZUSER, address, msg.as_string())
+        s.quit()
 
 
 
@@ -132,9 +132,9 @@ def  getSetOfEngineers(bugStates):
                         'bug_status':bugStates
                            }
     if opts.COMPONENT == None:
-            del bugQuery['component']
+        del bugQuery['component']
     if opts.RELEASE == None:
-	    del bugQuery['target_release']
+        del bugQuery['target_release']
     print('bug query='+str(bugQuery))
     queryResult = bugzilla.query(bugQuery)
     #print(queryResult)
@@ -165,14 +165,14 @@ def createBugReport():
     totalONDEV = bugzilla.query(totalDEVQuery)
     qaCount = len(totalONQA)
     devCount = len(totalONDEV)
-  
+
     buffer += ('############## CRITERIA  ################\n')
     buffer += ('Classification: ') + opts.CLASSIFICATION + '\n'
     buffer += ('Product: ') + opts.PRODUCT + '\n'
     if opts.COMPONENT:
-    	buffer += ('Component: ') + opts.COMPONENT + '\n'
+        buffer += ('Component: ') + opts.COMPONENT + '\n'
     if opts.RELEASE:
-    	buffer += ('Release: ') + opts.RELEASE + '\n'
+        buffer += ('Release: ') + opts.RELEASE + '\n'
     buffer += ('#########################################\n\n')
 
     buffer += ('############## BUG COUNTS ###############\n')
@@ -193,7 +193,7 @@ def createBugReport():
     setOfDevelopers = getSetOfEngineers(DEV_STATES)
 
     for thisQA in setOfQA:
-       	bugQueryQA = {
+        bugQueryQA = {
                               'classification': opts.CLASSIFICATION,
                               'component': opts.COMPONENT,
                               'product': opts.PRODUCT,
@@ -201,16 +201,16 @@ def createBugReport():
                               'bug_status':QA_STATES,
                               'qa_contact': thisQA
                               }
-       	if opts.COMPONENT == None:
-        	del bugQueryQA['component']
-       	if opts.RELEASE == None:
-	    	del bugQueryQA['target_release']
+        if opts.COMPONENT == None:
+            del bugQueryQA['component']
+        if opts.RELEASE == None:
+            del bugQueryQA['target_release']
 
-       	thisQA_onQA = bugzilla.query(bugQueryQA)
-       	buffer += 'QE: '+thisQA+ ' has '+str(len(thisQA_onQA))+ " bugs \n"
+        thisQA_onQA = bugzilla.query(bugQueryQA)
+        buffer += 'QE: '+thisQA+ ' has '+str(len(thisQA_onQA))+ " bugs \n"
 
     for thisDEV in setOfDevelopers:
-       	bugQueryDEV = {
+        bugQueryDEV = {
                               'classification': opts.CLASSIFICATION,
                               'component': opts.COMPONENT,
                               'product': opts.PRODUCT,
@@ -218,12 +218,12 @@ def createBugReport():
                               'bug_status':DEV_STATES,
                               'assigned_to': thisDEV
                               }
-       	if opts.COMPONENT == None:
-           	del bugQueryDEV['component']
+        if opts.COMPONENT == None:
+            del bugQueryDEV['component']
         if opts.RELEASE == None:
-                del bugQueryDEV['target_release']
+            del bugQueryDEV['target_release']
 
-	thisDEV_onDEV = bugzilla.query(bugQueryDEV)
+        thisDEV_onDEV = bugzilla.query(bugQueryDEV)
         buffer  += 'DEV: '+thisDEV+ ' has '+str(len(thisDEV_onDEV))+ " bugs \n"
 
     return buffer
@@ -252,14 +252,14 @@ totalModified = {
                                'bug_status':MODIFIED_STATE
                                }
 if opts.COMPONENT == None:
-            del totalQAQuery['component']
-            del totalDEVQuery['component']
-            del totalModified['component']
+    del totalQAQuery['component']
+    del totalDEVQuery['component']
+    del totalModified['component']
 
 if opts.RELEASE == None:
-            del totalQAQuery['target_release']
-            del totalDEVQuery['target_release']
-            del totalModified['target_release']
+    del totalQAQuery['target_release']
+    del totalDEVQuery['target_release']
+    del totalModified['target_release']
 
 #### VARIOUS PUBLIC QUERIES ################
 
@@ -273,8 +273,8 @@ if opts.EMAILDEV:
     email_ondev()
 
 if opts.EMAILREPORT:
-   print('EMAILING SUMMARY REPORT')
-   email_report()
+    print('EMAILING SUMMARY REPORT')
+    email_report()
 
 if opts.REPORT:
     print createBugReport()
