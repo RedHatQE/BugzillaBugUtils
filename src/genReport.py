@@ -99,7 +99,7 @@ def email_ondev():
         buffer += ('#########################################\n\n')
         buffer += email_txt
         print buffer
-        msg = MIMEText(buffert)
+        msg = MIMEText(buffer)
         msg['Subject'] = opts.PRODUCT+" Bugs"
         msg['From'] = opts.BZUSER
         msg['To'] = thisDev
