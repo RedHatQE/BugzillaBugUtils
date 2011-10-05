@@ -14,6 +14,7 @@ parser.add_option('-p', '--bugzilla_password', type='string', dest='BZPASS', hel
 parser.add_option('-c', '--classification', type='string', dest='CLASSIFICATION', help='bugzilla Classification: "Red Hat","Fedora","Community","Other",etc')
 parser.add_option('-t', '--component', type='string', dest='COMPONENT', help='bugzilla Component')
 parser.add_option('-f', '--product', type='string', dest='PRODUCT', help='bugzilla Product')
+parser.add_option('-v', '--version', type='string', dest='VERSION', help='bugzilla Version')
 parser.add_option('-s', '--release', type='string', dest='RELEASE', help='bugzilla Release')
 parser.add_option('-z', '--emailQA', action='store_true', dest='EMAILQA', help='send email report to QE')
 parser.add_option('-y', '--emailDEV', action='store_true', dest='EMAILDEV', help='send email report to DEV')
@@ -45,12 +46,15 @@ def email_onqa():
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'version': opts.VERSION,
                                'target_release': opts.RELEASE,
                                'bug_status':QA_STATES,
                                'qa_contact': thisQA
                               }
         if opts.COMPONENT == None:
             del bugQuery['component']
+        if opts.VERSION == None:
+	    del bugQuery['version']
         if opts.RELEASE == None:
             del bugQuery['target_release']
         thisQA_onQA = bugzilla.query(bugQuery)
@@ -75,12 +79,15 @@ def email_ondev():
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'version': opts.VERSION,
                                'target_release': opts.RELEASE,
                                'bug_status':DEV_STATES,
                                'assigned_to': thisDev
                                }
         if opts.COMPONENT == None:
             del ondevForThisDevDict['component']
+        if opts.VERSION == None:
+            del ondevForThisDevDict['version']
         if opts.RELEASE == None:
             del ondevForThisDevDict['target_release']
         thisdev_ondev = bugzilla.query(ondevForThisDevDict)
@@ -94,6 +101,8 @@ def email_ondev():
         buffer += ('Product: ') + opts.PRODUCT + '\n'
         if opts.COMPONENT:
             buffer += ('Component: ') + opts.COMPONENT + '\n'
+        if opts.VERSION:
+            buffer += ('Version: ') + opts.VERSION + '\n'
         if opts.RELEASE:
             buffer += ('Release: ') + opts.RELEASE + '\n'
         buffer += ('#########################################\n\n')
@@ -134,11 +143,14 @@ def  getSetOfEngineers(bugStates):
                         'classification': opts.CLASSIFICATION,
                         'component': opts.COMPONENT,
                         'product': opts.PRODUCT,
+                        'version': opts.VERSION,
                         'target_release': opts.RELEASE,
                         'bug_status':bugStates
                            }
     if opts.COMPONENT == None:
         del bugQuery['component']
+    if opts.VERSION == None:
+        del bugQuery['version']
     if opts.RELEASE == None:
         del bugQuery['target_release']
     print('bug query='+str(bugQuery))
@@ -177,6 +189,8 @@ def createBugReport():
     buffer += ('Product: ') + opts.PRODUCT + '\n'
     if opts.COMPONENT:
         buffer += ('Component: ') + opts.COMPONENT + '\n'
+    if opts.VERSION:
+        buffer += ('Version: ') + opts.VERSION + '\n'
     if opts.RELEASE:
         buffer += ('Release: ') + opts.RELEASE + '\n'
     buffer += ('#########################################\n\n')
@@ -203,12 +217,15 @@ def createBugReport():
                               'classification': opts.CLASSIFICATION,
                               'component': opts.COMPONENT,
                               'product': opts.PRODUCT,
+                              'version': opts.VERSION,
                               'target_release': opts.RELEASE,
                               'bug_status':QA_STATES,
                               'qa_contact': thisQA
                               }
         if opts.COMPONENT == None:
             del bugQueryQA['component']
+        if opts.VERSION == None:
+            del bugQueryQA['version']
         if opts.RELEASE == None:
             del bugQueryQA['target_release']
 
@@ -220,12 +237,15 @@ def createBugReport():
                               'classification': opts.CLASSIFICATION,
                               'component': opts.COMPONENT,
                               'product': opts.PRODUCT,
+                              'version': opts.VERSION,
                               'target_release': opts.RELEASE,
                               'bug_status':DEV_STATES,
                               'assigned_to': thisDEV
                               }
         if opts.COMPONENT == None:
             del bugQueryDEV['component']
+        if opts.VERSION == None:
+            del bugQueryDEV['version']
         if opts.RELEASE == None:
             del bugQueryDEV['target_release']
 
@@ -240,6 +260,7 @@ totalQAQuery = {
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'version': opts.VERSION,
                                'target_release': opts.RELEASE,
                                'bug_status':QA_STATES
                                }
@@ -247,6 +268,7 @@ totalDEVQuery = {
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'version': opts.VERSION,
                                'target_release': opts.RELEASE,
                                'bug_status':DEV_STATES
                                }
@@ -254,6 +276,7 @@ totalModified = {
                                'classification': opts.CLASSIFICATION,
                                'component': opts.COMPONENT,
                                'product': opts.PRODUCT,
+                               'version': opts.VERSION,
                                'target_release': opts.RELEASE,
                                'bug_status':MODIFIED_STATE
                                }
@@ -261,6 +284,11 @@ if opts.COMPONENT == None:
     del totalQAQuery['component']
     del totalDEVQuery['component']
     del totalModified['component']
+
+if opts.VERSION == None:
+    del totalQAQuery['version']
+    del totalDEVQuery['version']
+    del totalModified['version']
 
 if opts.RELEASE == None:
     del totalQAQuery['target_release']
