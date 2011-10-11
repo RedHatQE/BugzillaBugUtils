@@ -24,7 +24,8 @@ parser.add_option('-r', '--createReport', action='store_true',dest='REPORT', hel
 
 (opts, args) = parser.parse_args()
 
-DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV,MODIFIED,POST'
+#DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV,MODIFIED,POST'
+DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV'
 QA_STATES='ON_QA'
 MODIFIED_STATE='MODIFIED' #scratching my own itch here.. looking for bugs to go to the build
 
@@ -54,7 +55,7 @@ def email_onqa():
         if opts.COMPONENT == None:
             del bugQuery['component']
         if opts.VERSION == None:
-	    del bugQuery['version']
+            del bugQuery['version']
         if opts.RELEASE == None:
             del bugQuery['target_release']
         thisQA_onQA = bugzilla.query(bugQuery)
