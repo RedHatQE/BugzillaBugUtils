@@ -25,9 +25,9 @@ parser.add_option('-r', '--createReport', action='store_true',dest='REPORT', hel
 (opts, args) = parser.parse_args()
 
 #DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV,MODIFIED,POST'
-DEV_STATES='ON_DEV,NEW,ASSIGNED,ON_DEV'
+DEV_STATES='ON_DEV,NEW,ASSIGNED'
 QA_STATES='ON_QA'
-MODIFIED_STATE='MODIFIED' #scratching my own itch here.. looking for bugs to go to the build
+MODIFIED_STATE='MODIFIED,POST' #scratching my own itch here.. looking for bugs to go to the build
 
 if opts.PRODUCT == None or opts.CLASSIFICATION == None:
     print('Please provide a -f bugzilla product and -c bugzilla classification')
@@ -59,7 +59,7 @@ def email_onqa():
         if opts.RELEASE == None:
             del bugQuery['target_release']
         thisQA_onQA = bugzilla.query(bugQuery)
-        email_txt = opts.PRODUCT+' bugs for '+ thisQA+' \n'
+        email_txt = opts.PRODUCT+' bugs for '+ thisQA+' \n \nYou are the QA Contact for these bugs, please verify the bug is fixed and included in the appropriate build \n\n'
         for thisbug in thisQA_onQA:
             bugnum = str(thisbug)[1:7]
             email_txt += (str(thisbug)+'\n https://bugzilla.redhat.com/show_bug.cgi?id='+bugnum+ '\n\n')
@@ -92,7 +92,7 @@ def email_ondev():
         if opts.RELEASE == None:
             del ondevForThisDevDict['target_release']
         thisdev_ondev = bugzilla.query(ondevForThisDevDict)
-        email_txt = opts.PRODUCT+' bugs for '+ thisDev+' \n'
+        email_txt = opts.PRODUCT+' bugs for '+ thisDev+' \n \nYou are the assigned bug owner and are responsible for driving each bug and its solution.  If you disagree with the assignment, please contact the manager assigned to triage bugs for your team \n \n'
         for thisbug in thisdev_ondev:
             bugnum = str(thisbug)[1:7]
             email_txt += (str(thisbug)+'\n https://bugzilla.redhat.com/show_bug.cgi?id='+bugnum+ '\n\n')
